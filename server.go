@@ -6,28 +6,30 @@ import (
 )
 
 type Server struct {
-	TlsConfig *tls.Config
+	Config    *ServerConfig
 	Endpoint  common.Endpoint
 	Connector common.EndpointConnector
 }
 
-func NewServer(address string, uswTls bool) (*Server, error) {
+func NewServer(config *ServerConfig) (*Server, error) {
 	var err error
 
 	server := &Server{
-		TlsConfig: nil,
+		Config:    config,
 		Endpoint:  nil,
 		Connector: nil,
 	}
 
-	if uswTls {
-		server.TlsConfig, err = common.NewTlsConfigFromFlags()
+	var tlsConfig *tls.Config
+
+	if config.UseTls {
+		tlsConfig, err = common.NewTlsConfigFromFlags()
 		if common.Error(err) {
 			return nil, err
 		}
 	}
 
-	server.Endpoint, server.Connector, err = common.NewEndpoint(address, false, server.TlsConfig)
+	server.Endpoint, server.Connector, err = common.NewEndpoint(config.Address, false, tlsConfig)
 	if common.Error(err) {
 		return nil, err
 	}

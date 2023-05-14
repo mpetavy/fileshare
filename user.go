@@ -3,11 +3,12 @@ package main
 import "github.com/mpetavy/common"
 
 type User struct {
-	Login    string
-	Password string
-	RootDir  string
-	Locked   bool
-	ReadOnly bool
+	Login           string
+	Password        string
+	RootDir         string
+	Locked          bool
+	ReadOnly        bool
+	IsAuthenticated bool
 }
 
 var (
@@ -28,7 +29,7 @@ func NewUser(login string, password string, rootDir string, locked bool) (*User,
 
 	return &User{
 		Login:    login,
-		Password: "",
+		Password: password,
 		RootDir:  rootDir,
 		Locked:   locked,
 	}, nil

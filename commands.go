@@ -1,5 +1,7 @@
 package main
 
 const (
-	Quit = "quit"
+	QuitCmd = "quit"
+	UserCmd = "user"
+	PassCmd = "pass"
 )

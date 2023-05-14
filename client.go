@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"crypto/tls"
-	"github.com/chzyer/readline"
+	"fmt"
 	"github.com/mpetavy/common"
+	"os"
 )
 
 type Client struct {
@@ -33,6 +35,33 @@ func NewClient(address string, useTls bool) (*Client, error) {
 	return client, nil
 }
 
+func (client *Client) Send(line string) error {
+	_, err := client.Con.Write([]byte(line + "\n"))
+	if common.Error(err) {
+		return err
+	}
+
+	return nil
+}
+
+func (client *Client) QuitCmd(args []string) error {
+	err := client.Send(QuitCmd)
+	if common.Error(err) {
+		return err
+	}
+
+	return nil
+}
+
+func (client *Client) UserCmd() error {
+	err := client.Send(UserCmd)
+	if common.Error(err) {
+		return err
+	}
+
+	return nil
+}
+
 func (client *Client) Run() error {
 	err := client.Endpoint.Start()
 	if common.Error(err) {
@@ -48,32 +77,35 @@ func (client *Client) Run() error {
 		common.WarnError(client.Endpoint.Stop())
 	}()
 
-	rl, err := readline.New("> ")
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		common.WarnError(rl.Close())
-	}()
+	conScanner := bufio.NewScanner(client.Con)
+	inputScanner := bufio.NewScanner(os.Stdin)
 
 loop:
 	for {
-		cmd, err := rl.Readline()
-		if common.Error(err) {
-			break
-		}
-
-		_, err = client.Con.Write([]byte(cmd + "\n"))
-		if common.Error(err) {
-			break
-		}
-
-		args := common.Split(cmd, " ")
-
-		switch args[0] {
-		case Quit:
+		if !inputScanner.Scan() {
 			break loop
 		}
+
+		line := inputScanner.Text()
+
+		err = client.Send(line)
+		if common.Error(err) {
+			return err
+		}
+
+		args := common.Split(line, " ")
+
+		cmd := args[0]
+
+		if cmd == QuitCmd {
+			break loop
+		}
+
+		if !conScanner.Scan() {
+			break
+		}
+
+		fmt.Printf("%s\n", conScanner.Text())
 	}
 
 	return nil
