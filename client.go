@@ -7,20 +7,25 @@ import (
 )
 
 type Client struct {
-	tlsConfig *tls.Config
-	endpoint  common.Endpoint
-	connector common.EndpointConnector
-	con       common.EndpointConnection
+	TlsConfig *tls.Config
+	Endpoint  common.Endpoint
+	Connector common.EndpointConnector
+	Con       common.EndpointConnection
 }
 
-func NewClient(address string, tls bool) (*Client, error) {
+func NewClient(address string, useTls bool) (*Client, error) {
 	var err error
 
 	client := &Client{}
 
-	client.tlsConfig, err = common.NewTlsConfigFromFlags()
+	if useTls {
+		client.TlsConfig, err = common.NewTlsConfigFromFlags()
+		if common.Error(err) {
+			return nil, err
+		}
+	}
 
-	client.endpoint, client.connector, err = common.NewEndpoint(address, true, client.tlsConfig)
+	client.Endpoint, client.Connector, err = common.NewEndpoint(address, true, client.TlsConfig)
 	if common.Error(err) {
 		return nil, err
 	}
@@ -29,34 +34,46 @@ func NewClient(address string, tls bool) (*Client, error) {
 }
 
 func (client *Client) Run() error {
-	err := client.endpoint.Start()
+	err := client.Endpoint.Start()
 	if common.Error(err) {
 		return err
 	}
 
-	client.con, err = client.connector()
+	client.Con, err = client.Connector()
 	if common.Error(err) {
 		return err
 	}
 
 	defer func() {
-		common.Error(client.endpoint.Stop())
+		common.WarnError(client.Endpoint.Stop())
 	}()
 
 	rl, err := readline.New("> ")
 	if err != nil {
 		panic(err)
 	}
-	defer rl.Close()
+	defer func() {
+		common.WarnError(rl.Close())
+	}()
 
+loop:
 	for {
-		line, err := rl.Readline()
-		if err != nil { // io.EOF
+		cmd, err := rl.Readline()
+		if common.Error(err) {
 			break
 		}
 
-		client.con.Write([]byte(line + "\n"))
+		_, err = client.Con.Write([]byte(cmd + "\n"))
+		if common.Error(err) {
+			break
+		}
 
+		args := common.Split(cmd, " ")
+
+		switch args[0] {
+		case Quit:
+			break loop
+		}
 	}
 
 	return nil

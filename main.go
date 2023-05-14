@@ -14,6 +14,7 @@ var (
 	serverAddress = flag.String("s", "", "Server address")
 	clientAddress = flag.String("c", "", "Client address")
 	useTls        = flag.Bool("tls", true, "TLS usage")
+	rootDir       = flag.String("p", ".", "Root directory")
 )
 
 func startServer() error {

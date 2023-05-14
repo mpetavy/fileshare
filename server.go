@@ -6,19 +6,28 @@ import (
 )
 
 type Server struct {
-	tlsConfig *tls.Config
-	endpoint  common.Endpoint
-	connector common.EndpointConnector
+	TlsConfig *tls.Config
+	Endpoint  common.Endpoint
+	Connector common.EndpointConnector
 }
 
-func NewServer(address string, tls bool) (*Server, error) {
+func NewServer(address string, uswTls bool) (*Server, error) {
 	var err error
 
-	server := &Server{}
+	server := &Server{
+		TlsConfig: nil,
+		Endpoint:  nil,
+		Connector: nil,
+	}
 
-	server.tlsConfig, err = common.NewTlsConfigFromFlags()
+	if uswTls {
+		server.TlsConfig, err = common.NewTlsConfigFromFlags()
+		if common.Error(err) {
+			return nil, err
+		}
+	}
 
-	server.endpoint, server.connector, err = common.NewEndpoint(address, false, server.tlsConfig)
+	server.Endpoint, server.Connector, err = common.NewEndpoint(address, false, server.TlsConfig)
 	if common.Error(err) {
 		return nil, err
 	}
@@ -27,17 +36,17 @@ func NewServer(address string, tls bool) (*Server, error) {
 }
 
 func (server *Server) Run() error {
-	err := server.endpoint.Start()
+	err := server.Endpoint.Start()
 	if common.Error(err) {
 		return err
 	}
 
 	defer func() {
-		common.Error(server.endpoint.Stop())
+		common.WarnError(server.Endpoint.Stop())
 	}()
 
 	for {
-		con, err := server.connector()
+		con, err := server.Connector()
 		if common.Error(err) {
 			break
 		}
