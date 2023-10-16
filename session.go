@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/mpetavy/common"
-	"golang.org/x/exp/slices"
 )
 
 type Session struct {
@@ -46,7 +45,7 @@ func (session *Session) UserCmd(args []string) error {
 
 	userName := args[1]
 
-	found := slices.IndexFunc(server.Config.Users, func(u *User) bool {
+	found := common.SliceIndexFunc(server.Config.Users, func(u *User) bool {
 		return userName == u.Login
 	})
 
