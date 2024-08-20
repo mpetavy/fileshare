@@ -16,7 +16,6 @@ func NewSession(con common.EndpointConnection) (*Session, error) {
 
 	if !Anonymous.Locked {
 		var err error
-
 		user, err = common.Clone(Anonymous)
 		if common.Error(err) {
 			return nil, err
