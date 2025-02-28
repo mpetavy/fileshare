@@ -16,7 +16,7 @@ var (
 )
 
 func init() {
-	common.Events.AddListener(common.EventFlagsParsed{}, func(ev common.Event) {
+	common.Events.AddListener(common.EventFlags{}, func(ev common.Event) {
 		var err error
 
 		Anonymous, err = NewUser("anonymous", "", common.CleanPath(*rootDir), false)
